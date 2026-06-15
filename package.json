@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.6",
+    "@react-oauth/google": "^0.13.5",
     "@tailwindcss/vite": "^4.2.4",
+    "axios": "^1.18.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0"
