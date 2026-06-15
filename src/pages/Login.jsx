@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { loginApi, googleLoginApi } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
@@ -22,10 +22,21 @@ const Login = () => {
 
     try {
       const res = await loginApi({ email, password });
-      const payload = res?.data?.data;
 
-      if (!payload) throw new Error("Invalid response");
+      // 1. ĐÃ SỬA: Áp dụng cơ chế lấy dữ liệu linh hoạt
+      const payload = res?.data?.data || res?.data;
 
+      // 2. Kiểm tra xem có token trả về không
+      if (!payload || !payload.accessToken) {
+        throw new Error("Invalid response - Không tìm thấy Access Token");
+      }
+
+      // 3. Fallback user mặc định nếu Backend không trả về user
+      if (!payload.user) {
+        payload.user = { role: "CUSTOMER" };
+      }
+
+      // 4. Xử lý luồng MFA cho Admin
       if (payload.requiresMfa) {
         navigate("/admin/mfa", { state: { mfaToken: payload.mfaToken } });
         return;
@@ -63,19 +74,14 @@ const Login = () => {
         providerToken: credentialResponse.credential,
       });
 
-      // 1. In ra xem Backend trả về cấu trúc gì
       console.log("📦 Dữ liệu Backend trả về:", res.data);
 
-      // 2. Lấy dữ liệu linh hoạt: Có API bọc 2 lớp data, có API bọc 1 lớp
       const payload = res?.data?.data || res?.data;
 
-      // 3. Nếu vẫn không có payload hoặc thiếu token thì báo lỗi
       if (!payload || !payload.accessToken) {
         throw new Error("Invalid response - Missing accessToken");
       }
 
-      // 4. Fallback: Nếu Backend chỉ trả về token mà không kèm thông tin user
-      // thì tạm thời tạo một user mặc định để tránh lỗi văng ra ở processLoginSuccess
       if (!payload.user) {
         payload.user = { role: "CUSTOMER" };
       }
@@ -164,6 +170,15 @@ const Login = () => {
             useOneTap={false}
           />
         </div>
+        <p className="mt-8 text-center text-sm text-gray-600">
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            className="text-blue-600 font-medium hover:underline"
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
       </div>
     </div>
   );

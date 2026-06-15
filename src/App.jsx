@@ -8,7 +8,7 @@ import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBooking from "./pages/MyBooking";
 import Login from "./pages/Login";
-
+import Register from "./pages/Register";
 // Owner Pages
 import Layout from "./pages/hotelOwner/Layout";
 import Dashboard from "./pages/hotelOwner/Dashboard";
@@ -35,6 +35,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/rooms" element={<AllRooms />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
 
           {/* Customer / Protected Routes */}

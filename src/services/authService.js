@@ -16,3 +16,6 @@ export const verifyMfaApi = (data) => {
 export const googleLoginApi = (data) => {
   return axiosClient.post("/auth/google-login", data);
 };
+export const registerApi = (data) => {
+  return axiosClient.post("/auth/register", data);
+};

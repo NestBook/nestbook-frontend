@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
-import { useAuth } from "../contexts/AuthContext"; // Đường dẫn giả định tới AuthContext
+import { useAuth } from "../contexts/AuthContext";
 
 const BookIcon = () => (
   <svg
-    className="w-4 h-4 text-gray-700"
+    className="w-4 h-4 text-current"
     aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -33,9 +33,8 @@ const Navbar = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State cho User Menu
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Thay thế Clerk bằng Custom Auth Context
   const { user, logout } = useAuth();
 
   const navigate = useNavigate();
@@ -75,7 +74,11 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}
+      className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${
+        isScrolled
+          ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4"
+          : "py-4 md:py-6"
+      }`}
     >
       {/* Logo */}
       <Link to="/">
@@ -92,11 +95,15 @@ const Navbar = () => {
           <Link
             key={i}
             to={link.path}
-            className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}
+            className={`group flex flex-col gap-0.5 ${
+              isScrolled ? "text-gray-700" : "text-white"
+            }`}
           >
             {link.name}
             <div
-              className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`}
+              className={`${
+                isScrolled ? "bg-gray-700" : "bg-white"
+              } h-0.5 w-0 group-hover:w-full transition-all duration-300`}
             />
           </Link>
         ))}
@@ -104,7 +111,9 @@ const Navbar = () => {
         {/* Nút Dashboard hiển thị theo Role */}
         {user?.role === "HOTEL_OWNER" && (
           <button
-            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? "text-black border-black" : "text-white border-white"} transition-all`}
+            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${
+              isScrolled ? "text-black border-black" : "text-white border-white"
+            } transition-all`}
             onClick={() => navigate("/owner")}
           >
             Owner Dashboard
@@ -113,7 +122,9 @@ const Navbar = () => {
 
         {user?.role === "ADMIN" && (
           <button
-            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? "text-black border-black" : "text-white border-white"} transition-all`}
+            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${
+              isScrolled ? "text-black border-black" : "text-white border-white"
+            } transition-all`}
             onClick={() => navigate("/admin")}
           >
             Admin Dashboard
@@ -126,37 +137,43 @@ const Navbar = () => {
         <img
           src={assets.searchIcon}
           alt="search"
-          className={`${isScrolled ? "invert" : ""} h-7 transition-all duration-500`}
+          className={`${
+            isScrolled ? "invert" : ""
+          } h-7 transition-all duration-500`}
         />
 
         {user ? (
-          // Custom User Dropdown
+          // Custom User Dropdown - ĐÃ CĂN CHỈNH KIỂU CHỮ
           <div className="relative ml-4" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full font-medium hover:bg-gray-200 transition-all"
+              className="flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 py-1.5 px-3 rounded-full transition-colors cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-semibold">
                 {user.fullName?.charAt(0).toUpperCase() || "U"}
               </div>
-              <span className="max-w-[100px] truncate">{user.fullName}</span>
+              <span className="max-w-[120px] truncate text-sm font-medium text-gray-800 pr-1">
+                {user.fullName || "User"}
+              </span>
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col z-50">
+              <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 flex flex-col z-50">
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
                     navigate("/my-bookings");
                   }}
-                  className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  className="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors text-left"
                 >
                   <BookIcon /> My Bookings
                 </button>
-                <div className="h-px bg-gray-100 w-full" />
+
+                <div className="h-px bg-gray-100 w-auto mx-4 my-1" />
+
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
+                  className="flex items-center px-5 py-2.5 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left"
                 >
                   Logout
                 </button>
@@ -185,7 +202,9 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <div
-        className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 z-50 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 z-50 ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <button
           className="absolute top-4 right-4"
@@ -230,7 +249,7 @@ const Navbar = () => {
               </button>
             )}
             <button
-              className="flex items-center gap-2 text-gray-600"
+              className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mt-2"
               onClick={() => {
                 navigate("/my-bookings");
                 setIsMenuOpen(false);
@@ -243,7 +262,7 @@ const Navbar = () => {
                 handleLogout();
                 setIsMenuOpen(false);
               }}
-              className="text-red-500 font-medium mt-4"
+              className="text-red-500 hover:text-red-600 font-medium mt-4 transition-colors"
             >
               Logout
             </button>
