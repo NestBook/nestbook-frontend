@@ -23,20 +23,29 @@ const Login = () => {
     try {
       const res = await loginApi({ email, password });
 
-      // 1. ĐÃ SỬA: Áp dụng cơ chế lấy dữ liệu linh hoạt
       const payload = res?.data?.data || res?.data;
 
-      // 2. Kiểm tra xem có token trả về không
       if (!payload || !payload.accessToken) {
         throw new Error("Invalid response - Không tìm thấy Access Token");
       }
 
-      // 3. Fallback user mặc định nếu Backend không trả về user
+      // --- BẮT ĐẦU ĐOẠN XỬ LÝ LỌC QUYỀN (ROLE) Ở FRONTEND ---
       if (!payload.user) {
         payload.user = { role: "CUSTOMER" };
+      } else {
+        // Kiểm tra nếu BE trả về mảng 'roles' (dạng object [{code: 'HOTEL_OWNER'}] hoặc mảng string)
+        if (payload.user.roles && payload.user.roles.length > 0) {
+          const firstRole = payload.user.roles[0];
+          // Lấy mã code (nếu là object) hoặc lấy luôn giá trị (nếu là chuỗi)
+          payload.user.role = firstRole.code || firstRole || "CUSTOMER";
+        }
+        // Nếu không có role nào, gán mặc định là Khách
+        else if (!payload.user.role) {
+          payload.user.role = "CUSTOMER";
+        }
       }
+      // --- KẾT THÚC ĐOẠN XỬ LÝ LỌC QUYỀN ---
 
-      // 4. Xử lý luồng MFA cho Admin
       if (payload.requiresMfa) {
         navigate("/admin/mfa", { state: { mfaToken: payload.mfaToken } });
         return;
@@ -82,9 +91,18 @@ const Login = () => {
         throw new Error("Invalid response - Missing accessToken");
       }
 
+      // --- BẮT ĐẦU ĐOẠN XỬ LÝ LỌC QUYỀN (ROLE) Ở FRONTEND ---
       if (!payload.user) {
         payload.user = { role: "CUSTOMER" };
+      } else {
+        if (payload.user.roles && payload.user.roles.length > 0) {
+          const firstRole = payload.user.roles[0];
+          payload.user.role = firstRole.code || firstRole || "CUSTOMER";
+        } else if (!payload.user.role) {
+          payload.user.role = "CUSTOMER";
+        }
       }
+      // --- KẾT THÚC ĐOẠN XỬ LÝ LỌC QUYỀN ---
 
       processLoginSuccess(payload);
     } catch (error) {
