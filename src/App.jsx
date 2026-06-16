@@ -2,43 +2,53 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-// Pages
+// Public Pages
 import Home from "./pages/Home";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBooking from "./pages/MyBooking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+
 // Owner Pages
-import Layout from "./pages/hotelOwner/Layout";
-import Dashboard from "./pages/hotelOwner/Dashboard";
+import OwnerLayout from "./pages/hotelOwner/Layout";
+import OwnerDashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
 import ListRoom from "./pages/hotelOwner/ListRoom";
+
+// Admin Pages
+import AdminLayout from "./pages/admin/Layout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import Hotels from "./pages/admin/Hotels";
+import AssignOwner from "./pages/admin/AssignOwner";
 
 // Route Guards
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import OwnerRoute from "./components/auth/OwnerRoute";
+import AdminRoute from "./components/auth/AdminRoute";
 
 const App = () => {
   const location = useLocation();
-  // Giấu Navbar ở các trang của Owner (Owner có Sidebar riêng trong Layout)
+
   const isOwnerPath = location.pathname.startsWith("/owner");
+  const isAdminPath = location.pathname.startsWith("/admin");
+
+  const hideNavbarFooter = isOwnerPath || isAdminPath;
 
   return (
     <div>
-      {/* Chỉ render Navbar ở giao diện Public/Customer */}
-      {!isOwnerPath && <Navbar />}
+      {!hideNavbarFooter && <Navbar />}
 
       <div className="min-h-[70vh]">
         <Routes>
-          {/* Public Routes */}
+          {/* ================= PUBLIC ================= */}
           <Route path="/" element={<Home />} />
           <Route path="/rooms" element={<AllRooms />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Customer / Protected Routes */}
+          {/* ================= CUSTOMER ================= */}
           <Route
             path="/my-bookings"
             element={
@@ -48,23 +58,44 @@ const App = () => {
             }
           />
 
-          {/* Hotel Owner Routes */}
+          {/* ================= OWNER ================= */}
           <Route
             path="/owner"
             element={
               <OwnerRoute>
-                <Layout />
+                <OwnerLayout />
               </OwnerRoute>
             }
           >
-            <Route index element={<Dashboard />} />
+            <Route index element={<OwnerDashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListRoom />} />
+          </Route>
+
+          {/* ================= ADMIN ================= */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+
+            {/* Hotel CRUD */}
+            <Route path="hotels" element={<Hotels />} />
+
+            {/* Assign Owner */}
+            <Route
+              path="hotels/:hotelId/assign-owner"
+              element={<AssignOwner />}
+            />
           </Route>
         </Routes>
       </div>
 
-      {!isOwnerPath && <Footer />}
+      {!hideNavbarFooter && <Footer />}
     </div>
   );
 };
