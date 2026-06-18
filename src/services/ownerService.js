@@ -33,3 +33,11 @@ export const getRoomTypesApi = (hotelId) => {
 export const deleteRoomTypeApi = (id) => {
   return axiosClient.delete(`/owner/room-types/${id}`);
 };
+// Thêm hàm này vào file ownerService.js
+export const uploadRoomImageApi = (roomId, formData) => {
+  return axiosClient.post(`/owner/room-types/${roomId}/images`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};

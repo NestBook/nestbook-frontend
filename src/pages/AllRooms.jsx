@@ -1,7 +1,7 @@
-import { assets, facilityIcons, roomsDummyData } from "../assets/assets";
-import { useNavigate } from "react-router-dom";
-import StarRating from "../components/StarRating";
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import HotelCard from "../components/HotelCard";
+import { searchHotelsApi, getHotelDetailApi } from "../services/publicService";
 
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
   return (
@@ -31,7 +31,9 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
 };
 
 const AllRooms = () => {
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
 
   const roomTypes = [
@@ -40,89 +42,99 @@ const AllRooms = () => {
     "Luxury Room",
     "Family Room",
   ];
-
   const priceRanges = ["0 to 500", "500 to 1000", "1000 to 2000", "2000+"];
-
   const sortOptions = [
     "Price: Low to High",
     "Price: High to Low",
     "Newest First",
   ];
 
+  useEffect(() => {
+    const fetchHotels = async () => {
+      setLoading(true);
+      try {
+        const params = {
+          city: searchParams.get("city") || "",
+          checkInDate: searchParams.get("checkInDate") || "",
+          checkOutDate: searchParams.get("checkOutDate") || "",
+          quantity: searchParams.get("quantity") || 1,
+        };
+
+        // 1. Gọi API Search (BE chỉ trả về ID và rooms)
+        const res = await searchHotelsApi(params);
+        const searchResults = res.data?.data ?? res.data ?? [];
+
+        // 2. Tự động dùng vòng lặp gọi API Detail để lấy Tên và Hình ảnh
+        const detailedHotels = await Promise.all(
+          searchResults.map(async (searchItem) => {
+            try {
+              const detailRes = await getHotelDetailApi(searchItem.id);
+              const hotelInfo = detailRes.data?.data ?? detailRes.data;
+              console.log("searchItem.rooms:", searchItem.rooms);
+              console.log("hotelInfo:", hotelInfo);
+
+              // Tính giá rẻ nhất từ danh sách phòng trả về
+              const minPrice =
+                searchItem.rooms?.length > 0
+                  ? Math.min(
+                      ...searchItem.rooms.map(
+                        (r) => r.pricePerNight || r.price || 0,
+                      ),
+                    )
+                  : 0;
+              console.log("minPrice:", minPrice);
+              return {
+                ...hotelInfo, // Đắp tên, thành phố, địa chỉ từ Detail
+                minPricePerNight: minPrice,
+                availableRoomTypes: searchItem.rooms,
+              };
+            } catch (err) {
+              console.error(`Lỗi tải chi tiết hotel ${searchItem.id}`, err);
+              return null;
+            }
+          }),
+        );
+
+        // 3. Lọc các khách sạn thành công và render
+        setHotels(detailedHotels.filter((h) => h !== null));
+      } catch (error) {
+        console.error("Lỗi tìm kiếm khách sạn:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotels();
+  }, [searchParams]);
+
   return (
-    <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32 ">
-      <div>
-        <div className="flex flex-col items-start text-left">
-          <h1 className="font-playfair text-4xl md:text-[40px]">Hotel Rooms</h1>
+    <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
+      <div className="flex-1 w-full lg:mr-8">
+        <div className="flex flex-col items-start text-left mb-8">
+          <h1 className="font-playfair text-4xl md:text-[40px]">
+            Search Results
+          </h1>
           <p className="text-sm md:text-base text-gray-500/90 mt-2">
-            Take advantage of our wide selection of comfortable and
-            well-appointed hotel rooms.
+            Found {hotels.length} hotels matching your criteria.
           </p>
         </div>
-        {roomsDummyData.map((room) => (
-          <div
-            key={room._id}
-            className="flex flex-col md:flex-row items-start py-10 gap-6 border-b border-gray-300 last:pb-30 last:border-0"
-          >
-            <img
-              onClick={() => {
-                navigate(`/rooms/${room._id}`);
-                window.scrollTo(0, 0);
-              }}
-              src={room.images?.[0]}
-              alt="hotel-img"
-              title="View Room Detail"
-              className="max-h-65 md:w-1/2 rounded-xl shadow-lg object-cover cursor-pointer "
-            />
-            <div className="md:w-1/2 flex flex-col gap-2">
-              <p className="text-gray-500">{room.hotel.city}</p>
-              <p
-                onClick={() => {
-                  navigate(`/rooms/${room._id}`);
-                  window.scrollTo(0, 0);
-                }}
-                className="text-gray-800 text-3xl font-playfair cursor-pointer"
-              >
-                {room.hotel.name}
-              </p>
-              <div className="flex items-center">
-                <StarRating rating={room.hotel.rating} />
-                <p className="ml-2">200+ reviews</p>
-              </div>
-              <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
-                <img src={assets.locationIcon} alt="location-icon" />
-                <span>{room.hotel.address}</span>
-              </div>
-              {/*room amenities */}
-              <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
-                {room.amenities.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F5F5FF]/70"
-                  >
-                    <img
-                      src={facilityIcons[item]}
-                      alt={item}
-                      className="w-5 h-5"
-                    />
-                    <p className="text-xs">{item}</p>
-                  </div>
-                ))}
-              </div>
-              {/*room price  */}
-              <p className="text-xl font-medium text-gray-700">
-                ${room.pricePerNight}/night
-              </p>
-            </div>
+
+        {loading ? (
+          <p className="text-gray-500 py-10">Đang tìm kiếm khách sạn...</p>
+        ) : hotels.length === 0 ? (
+          <p className="text-gray-500 py-10">Không tìm thấy khách sạn nào.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {hotels.map((hotel, index) => (
+              <HotelCard key={hotel.id} hotel={hotel} index={index} />
+            ))}
           </div>
-        ))}
+        )}
       </div>
-      {/*filter section */}
-      <div className="bg-white w-80 border border-gray-300 text-gray-600 max-lg:mb-8 min-lg:mt-16">
+
+      <div className="bg-white w-full lg:w-80 lg:shrink-0 border border-gray-300 text-gray-600 max-lg:mb-8 min-lg:mt-16">
         <div
-          className={`flex items-center justify-between px-5 py-2.5 lg:border-b border-gray-300 ${
-            openFilter ? "border-b" : ""
-          }`}
+          className={`flex items-center justify-between px-5 py-2.5 lg:border-b border-gray-300 ${openFilter ? "border-b" : ""}`}
         >
           <p className="text-base font-medium text-gray-700">FILTERS</p>
           <div className="text-xs cursor-pointer ">
@@ -136,9 +148,7 @@ const AllRooms = () => {
           </div>
         </div>
         <div
-          className={`${
-            openFilter ? "h-auto" : "h-0 lg:h-auto"
-          } overflow-hidden transition-all duration-700`}
+          className={`${openFilter ? "h-auto" : "h-0 lg:h-auto"} overflow-hidden transition-all duration-700`}
         >
           <div className="px-5 pt-5">
             <p className="font-medium text-gray-800 pb-2 ">Popular Filter</p>
@@ -147,13 +157,13 @@ const AllRooms = () => {
             ))}
           </div>
           <div className="px-5 pt-5">
-            <p className="font-medium text-gray-800 pb-2 "> Price Range</p>
+            <p className="font-medium text-gray-800 pb-2 ">Price Range</p>
             {priceRanges.map((range, index) => (
               <CheckBox key={index} label={`$${range}`} />
             ))}
           </div>
           <div className="px-5 pt-5 pb-7">
-            <p className="font-medium text-gray-800 pb-2 "> Sort By</p>
+            <p className="font-medium text-gray-800 pb-2 ">Sort By</p>
             {sortOptions.map((option, index) => (
               <RadioButton key={index} label={option} />
             ))}

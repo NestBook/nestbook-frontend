@@ -29,7 +29,15 @@ export const assignHotelOwnerApi = (hotelId, ownerId) => {
 export const getOwnersListApi = () => {
   return axiosClient.get("/users");
 };
-// Thêm API cấp quyền cho User
+
 export const assignUserRoleApi = (userId, roleIds) => {
   return axiosClient.put(`/users/${userId}/roles`, { roleIds });
+};
+
+export const uploadHotelImageApi = (hotelId, formData) => {
+  return axiosClient.post(`/admin/hotels/${hotelId}/images`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };

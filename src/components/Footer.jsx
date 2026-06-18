@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="flex flex-wrap justify-between gap-12 md:gap-6">
         <div className="max-w-80">
           <img
-            src={assets.logo}
+            src={assets.logo12}
             className="mb-4 h-8 md:h-9 invert opacity-80"
           />
           <p className="text-sm">
