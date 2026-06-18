@@ -15,7 +15,7 @@ import OwnerLayout from "./pages/hotelOwner/Layout";
 import OwnerDashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
 import ListRoom from "./pages/hotelOwner/ListRoom";
-
+import Availability from "./pages/hotelOwner/Availability";
 // Admin Pages
 import AdminLayout from "./pages/admin/Layout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -70,6 +70,7 @@ const App = () => {
             <Route index element={<OwnerDashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListRoom />} />
+            <Route path="availability" element={<Availability />} />
           </Route>
 
           {/* ================= ADMIN ================= */}

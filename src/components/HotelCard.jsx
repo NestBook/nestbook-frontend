@@ -1,7 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 
 const HotelCard = ({ hotel, room, index }) => {
+  // (NEW) Bắt lấy chuỗi query hiện tại trên URL (ví dụ: ?city=HN&checkInDate=2026-06-20...)
+  const location = useLocation();
+
   const data = hotel || room;
   if (!data) return null;
 
@@ -13,24 +16,31 @@ const HotelCard = ({ hotel, room, index }) => {
   // Đọc đúng trường price, dự phòng minPricePerNight
   const price = data.minPricePerNight || data.price || data.lowestPrice || 0;
 
-  // Fallback an toàn cho Backend MVP (chưa có trường rating)
+  // Fallback an toàn cho Backend MVP
   const rating = data.averageRating || 5.0;
 
-  // Xử lý mảng hình ảnh an toàn
+  // (NEW) XỬ LÝ ẢNH THÔNG MINH: Lấy ảnh Khách sạn HOẶC ảnh của các Loại phòng
+  let imageSrc = "https://picsum.photos/800/500";
   const hotelImages = data.images ?? [];
-  const imageSrc =
-    hotelImages[0]?.url || hotelImages[0] || "https://picsum.photos/800/500";
+  const roomImages =
+    data.availableRoomTypes?.flatMap((rt) => rt.images ?? []) ?? [];
+  const allImages = [...hotelImages, ...roomImages]; // Gộp chung lại
+
+  if (allImages.length > 0) {
+    imageSrc = allImages[0]?.url || allImages[0];
+  }
 
   return (
     <Link
-      to={"/rooms/" + id}
+      // (NEW) Nối thêm location.search để bảo toàn Ngày CheckIn/CheckOut sang trang Báo giá
+      to={`/rooms/${id}${location.search}`}
       onClick={() => window.scrollTo(0, 0)}
-      className="relative max-w-70 w-full rounded-xl overflow-hidden bg-white text-gray-500/90 shadow-[0px_4px_4px_rgba(0,0,0,0.05)] transition hover:shadow-lg"
+      className="relative max-w-70 w-full rounded-xl overflow-hidden bg-white text-gray-500/90 shadow-[0px_4px_4px_rgba(0,0,0,0.05)] transition hover:shadow-lg block"
     >
       <img src={imageSrc} alt="hotel" className="w-full h-48 object-cover" />
 
       {index % 2 === 0 && (
-        <p className="px-3 py-1 absolute top-3 left-3 text-xs bg-white text-gray-800 font-medium rounded-full">
+        <p className="px-3 py-1 absolute top-3 left-3 text-xs bg-white text-gray-800 font-medium rounded-full shadow-sm">
           Best Seller
         </p>
       )}

@@ -8,6 +8,26 @@ import {
   bookingQuoteApi,
 } from "../services/publicService";
 
+// Helper Functions cho Validate Ngày
+const getTodayString = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const getNextDayString = (dateStr) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  const d = new Date(year, month - 1, day);
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+};
+
 const RoomDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -22,6 +42,24 @@ const RoomDetails = () => {
   const [quoteError, setQuoteError] = useState("");
   const [isQuoting, setIsQuoting] = useState(false);
 
+  // (NEW) State ngày tháng (Khởi tạo mặc định lấy từ URL tìm kiếm sang)
+  const today = getTodayString();
+  const [checkIn, setCheckIn] = useState(searchParams.get("checkInDate") || "");
+  const [checkOut, setCheckOut] = useState(
+    searchParams.get("checkOutDate") || "",
+  );
+
+  // (NEW) Hàm xử lý đổi ngày thông minh
+  const handleCheckInChange = (e) => {
+    const val = e.target.value;
+    setCheckIn(val);
+
+    // Nếu ngày Check-out đang có mà lại <= ngày Check-in mới thì tự đẩy lên
+    if (checkOut && val >= checkOut) {
+      setCheckOut(getNextDayString(val));
+    }
+  };
+
   useEffect(() => {
     const fetchHotelInfo = async () => {
       try {
@@ -34,32 +72,27 @@ const RoomDetails = () => {
         const hotelData = hotelRes.data?.data ?? hotelRes.data;
         const roomsPayload = roomsRes.data?.data ?? roomsRes.data;
 
-        // BÓC TÁCH MẢNG ROOM TYPES
         const roomsArray = Array.isArray(roomsPayload)
           ? roomsPayload
           : roomsPayload?.roomTypes || [];
 
-        // --- GỘP ẢNH HOTEL + ẢNH TỪ TẤT CẢ ROOM TYPES THÀNH 1 GALLERY ---
         const hotelImgs = (hotelData?.images ?? []).map(
           (img) => img?.url || img,
         );
         const roomImgs = roomsArray.flatMap((rt) =>
           (rt.images ?? []).map((img) => img?.url || img),
         );
-        const allImages = [...new Set([...hotelImgs, ...roomImgs])]; // Loại bỏ ảnh trùng lặp
+        const allImages = [...new Set([...hotelImgs, ...roomImgs])];
 
-        // Lưu thông tin khách sạn kèm theo mảng ảnh tổng hợp
         setHotel({ ...hotelData, _galleryImages: allImages });
         setRoomTypes(roomsArray);
 
-        // Đặt ảnh chính (mainImage)
         if (allImages.length > 0) {
           setMainImage(allImages[0]);
         } else {
           setMainImage("https://picsum.photos/800/500");
         }
 
-        // Set giá trị select box mặc định
         if (roomsArray.length > 0) {
           setSelectedRoomId(roomsArray[0].id);
         }
@@ -83,8 +116,8 @@ const RoomDetails = () => {
       const payload = {
         roomTypeId: selectedRoomId,
         quantity: Number(e.target.guests.value),
-        checkInDate: e.target.checkInDate.value,
-        checkOutDate: e.target.checkOutDate.value,
+        checkInDate: checkIn, // Dùng state thay cho e.target
+        checkOutDate: checkOut, // Dùng state thay cho e.target
       };
 
       const res = await bookingQuoteApi(payload);
@@ -108,7 +141,6 @@ const RoomDetails = () => {
   if (!hotel)
     return <div className="py-30 text-center">Không tìm thấy khách sạn!</div>;
 
-  // Lấy mảng ảnh tổng hợp đã gộp ở useEffect
   const hotelImages = hotel._galleryImages ?? [];
 
   return (
@@ -146,7 +178,7 @@ const RoomDetails = () => {
             <img
               onClick={() => setMainImage(img)}
               key={index}
-              src={img} // Vì logic ở trên đã bóc tách img thành URL string
+              src={img}
               alt="Hotel thumbnail"
               className={`w-full h-48 rounded-xl shadow-md object-cover cursor-pointer ${
                 mainImage === img ? "outline-3 outline-orange-500" : ""
@@ -187,7 +219,9 @@ const RoomDetails = () => {
               type="date"
               id="checkInDate"
               required
-              defaultValue={searchParams.get("checkInDate") || ""}
+              min={today} // (NEW) Khóa check-in từ hôm nay
+              value={checkIn}
+              onChange={handleCheckInChange}
               className="border border-gray-300 rounded px-3 py-2.5 outline-none bg-white"
             />
           </div>
@@ -198,7 +232,11 @@ const RoomDetails = () => {
               type="date"
               id="checkOutDate"
               required
-              defaultValue={searchParams.get("checkOutDate") || ""}
+              min={
+                checkIn ? getNextDayString(checkIn) : getNextDayString(today)
+              } // (NEW) Check-out động
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
               className="border border-gray-300 rounded px-3 py-2.5 outline-none bg-white"
             />
           </div>
