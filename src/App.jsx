@@ -9,18 +9,22 @@ import RoomDetails from "./pages/RoomDetails";
 import MyBooking from "./pages/MyBooking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Payment from "./pages/Payment";
 
 // Owner Pages
 import OwnerLayout from "./pages/hotelOwner/Layout";
 import OwnerDashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
 import ListRoom from "./pages/hotelOwner/ListRoom";
+import Availability from "./pages/hotelOwner/Availability";
 
 // Admin Pages
 import AdminLayout from "./pages/admin/Layout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Hotels from "./pages/admin/Hotels";
 import AssignOwner from "./pages/admin/AssignOwner";
+import Mfa from "./pages/admin/Mfa";
+import AdminReviews from "./pages/admin/Reviews";
 
 // Route Guards
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -47,6 +51,7 @@ const App = () => {
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/mfa" element={<Mfa />} />
 
           {/* ================= CUSTOMER ================= */}
           <Route
@@ -57,6 +62,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/payment" element={<Payment />} />
 
           {/* ================= OWNER ================= */}
           <Route
@@ -70,6 +76,7 @@ const App = () => {
             <Route index element={<OwnerDashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListRoom />} />
+            <Route path="availability" element={<Availability />} />
           </Route>
 
           {/* ================= ADMIN ================= */}
@@ -85,6 +92,9 @@ const App = () => {
 
             {/* Hotel CRUD */}
             <Route path="hotels" element={<Hotels />} />
+
+            {/* Reviews Moderation */}
+            <Route path="reviews" element={<AdminReviews />} />
 
             {/* Assign Owner */}
             <Route

@@ -1,106 +1,256 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
-import { assets, userBookingsDummyData } from "../assets/assets";
+
+import { getMyBookingsApi, getHotelRoomTypesApi } from "../services/publicService";
 
 const MyBooking = () => {
-  const [bookings] = useState(userBookingsDummyData);
-  const currency = "$";
+const [bookings, setBookings] = useState([]);
+const [loading, setLoading] = useState(true);
 
-  return (
-    <div className="py-28 md:pb-35 md:pt-32 px-4 md:px-16 lg:px-24 xl:px-32">
-      <Title
-        title="My Bookings"
-        subTitle="Easily manage your past, current, and upcoming hotel reservations in one place. Plan your trips seamlessly with just a few clicks"
-        align="left"
-      />
+const navigate = useNavigate();
 
-      <div className="max-w-6xl mt-8 w-full text-gray-800">
-        {/* Header của bảng - Chỉ hiển thị trên màn hình máy tính */}
-        <div className="hidden md:grid md:grid-cols-[3fr_2fr_1fr] w-full border-b border-gray-300 font-medium text-base py-3">
-          <p>Hotels</p>
-          <p>Date & Timings</p>
-          <p>Payment</p>
-        </div>
+useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await getMyBookingsApi();
+        const rawBookings = res.data?.data ?? res.data ?? [];
 
-        {bookings.map((booking) => (
-          <div
-            key={booking._id}
-            className="grid grid-cols-1 md:grid-cols-[3fr_2fr_1fr] w-full border-b border-gray-300 py-6 first:border-t"
-          >
-            {/* Cột 1: Thông tin khách sạn */}
-            <div className="flex flex-col md:flex-row">
-              <img
-                src={booking.room.images[0]}
-                alt="hotel-img"
-                className=" min-md:w-44 rounded shadow object-cover"
-              />
-              <div className="flex flex-col gap-1.5 max-md:mt-3 md:ml-4">
-                <p className="font-playfair text-2xl">
-                  {booking.hotel.name}
-                  <span className="font-inter text-sm ml-1">
-                    ({booking.room.roomType})
-                  </span>
-                </p>
-                {/* Địa chỉ */}
-                <div className="flex items-center gap-1 text-sm text-gray-500">
-                  <img src={assets.locationIcon} alt="location" />
-                  <span>{booking.hotel.address}</span>
-                </div>
-                {/* Số khách */}
-                <div className="flex items-center gap-1 text-sm text-gray-500">
-                  <img src={assets.guestsIcon} alt="guests" />
-                  <span>{booking.guests} Guests</span>
-                </div>
-                {/* Tổng tiền */}
-                <p className="font-medium text-base mt-1">
-                  Total: {currency}
-                  {booking.totalPrice}
-                </p>
-              </div>
-            </div>
+        // Cache for hotel room types to prevent redundant API requests
+        const hotelCache = {};
 
-            {/* Cột 2: Ngày nhận và trả phòng */}
-            <div className="flex flex-row md:items-center md:gap-12 mt-3 gap-8">
-              <div>
-                <p className="font-medium text-gray-500">Check-in:</p>
-                <p>{new Date(booking.checkInDate).toDateString()}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-500">Check-out</p>
-                <p>{new Date(booking.checkOutDate).toDateString()}</p>
-              </div>
-            </div>
+        const resolvedBookings = await Promise.all(
+          rawBookings.map(async (booking) => {
+            let hotelName = booking.hotelName;
+            let roomTypeName = booking.roomTypeName;
 
-            {/* Cột 3: Trạng thái thanh toán */}
-            <div className="flex flex-col items-start justify-center pt-3">
-              <div className="flex items-center gap-2">
-                {/* Dấu chấm màu hiển thị trạng thái thanh toán */}
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    booking.isPaid ? "bg-green-500" : "bg-red-500"
-                  }`}
-                ></div>
-                <p
-                  className={`text-sm font-medium ${
-                    booking.isPaid ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  {booking.isPaid ? "Paid" : "Unpaid"}
-                </p>
-              </div>
+            // If backend returned undefined or null for names, resolve dynamically
+            if (!hotelName || !roomTypeName) {
+              try {
+                if (!hotelCache[booking.hotelId]) {
+                  const detailsRes = await getHotelRoomTypesApi(booking.hotelId);
+                  hotelCache[booking.hotelId] = detailsRes.data?.data ?? detailsRes.data;
+                }
+                const data = hotelCache[booking.hotelId];
+                if (data) {
+                  if (!hotelName && data.hotel) {
+                    hotelName = data.hotel.name;
+                  }
+                  if (!roomTypeName && data.roomTypes) {
+                    const matchedRoom = data.roomTypes.find(
+                      (r) => String(r.id) === String(booking.roomTypeId)
+                    );
+                    if (matchedRoom) {
+                      roomTypeName = matchedRoom.name;
+                    }
+                  }
+                }
+              } catch (err) {
+                console.error(`Lỗi khi giải quyết tên cho hotel ${booking.hotelId}:`, err);
+              }
+            }
 
-              {/* Nút thanh toán (chỉ hiện khi chưa thanh toán) */}
-              {!booking.isPaid && (
-                <button className="py-1.5 px-4 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer">
-                  Pay Now
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+            return {
+              ...booking,
+              hotelName: hotelName || "Khách sạn",
+              roomTypeName: roomTypeName || "Loại phòng",
+            };
+          })
+        );
+
+        setBookings(resolvedBookings);
+      } catch (error) {
+        console.error("Lỗi tải danh sách booking:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+const getPaymentBadge = (status) => {
+switch (status) {
+case "PAID":
+return "bg-green-100 text-green-700";
+
+  case "PENDING":
+    return "bg-yellow-100 text-yellow-700";
+
+  default:
+    return "bg-red-100 text-red-700";
+}
+
+
+};
+
+return ( <div className="py-28 md:pt-32 md:pb-20 px-4 md:px-12 lg:px-24"> <Title
+     title="My Bookings"
+     subTitle="Quản lý tất cả đơn đặt phòng của bạn"
+     align="left"
+   />
+
+
+  {loading ? (
+    <div className="flex justify-center py-20">
+      <div className="text-gray-500">
+        Đang tải dữ liệu...
       </div>
     </div>
-  );
+  ) : bookings.length === 0 ? (
+    <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center mt-8">
+      <div className="text-5xl mb-4">🏨</div>
+
+      <h3 className="text-xl font-semibold text-gray-700">
+        Chưa có đơn đặt phòng nào
+      </h3>
+
+      <p className="text-gray-500 mt-2">
+        Hãy bắt đầu đặt phòng cho chuyến đi tiếp theo của bạn.
+      </p>
+    </div>
+  ) : (
+    <div className="space-y-6 mt-8">
+      {bookings.map((booking) => (
+        <div
+          key={booking.id}
+          className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+        >
+          <div className="grid md:grid-cols-[260px_1fr]">
+            {/* IMAGE */}
+            <img
+              src="https://images.unsplash.com/photo-1566073771259-6a8506099945"
+              alt="Hotel"
+              className="w-full h-64 md:h-full object-cover"
+            />
+
+            {/* CONTENT */}
+            <div className="p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between flex-wrap gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      {booking.hotelName || "Khách sạn"}
+                    </h2>
+
+                    <p className="text-gray-500 mt-1">
+                      {booking.roomTypeName || "Loại phòng"}
+                    </p>
+
+                    <p className="text-sm text-gray-400 mt-2">
+                      Mã đặt phòng:
+                      <span className="font-medium ml-1">
+                        {booking.bookingCode}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`px-4 py-1 rounded-full text-sm font-medium ${getPaymentBadge(
+                        booking.paymentStatus,
+                      )}`}
+                    >
+                      {booking.paymentStatus}
+                    </span>
+
+                    <span className="text-xs text-gray-500">
+                      {booking.bookingStatus}
+                    </span>
+                  </div>
+                </div>
+
+                {/* THÔNG TIN KHÁCH */}
+                <div className="mt-5 bg-gray-50 rounded-xl p-4">
+                  <p className="font-semibold text-gray-800">
+                    {booking.customerName}
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    {booking.customerEmail}
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    {booking.customerPhone}
+                  </p>
+                </div>
+
+                {/* THÔNG TIN LƯU TRÚ */}
+                <div className="grid grid-cols-3 gap-4 mt-6">
+                  <div>
+                    <p className="text-xs uppercase text-gray-400">
+                      Check In
+                    </p>
+
+                    <p className="font-medium text-gray-700">
+                      {new Date(
+                        booking.checkInDate,
+                      ).toLocaleDateString("vi-VN")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase text-gray-400">
+                      Check Out
+                    </p>
+
+                    <p className="font-medium text-gray-700">
+                      {new Date(
+                        booking.checkOutDate,
+                      ).toLocaleDateString("vi-VN")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase text-gray-400">
+                      Lưu trú
+                    </p>
+
+                    <p className="font-medium text-blue-600">
+                      {booking.nights} đêm
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* FOOTER */}
+              <div className="flex justify-between items-center flex-wrap gap-4 mt-8">
+                <div>
+                  <p className="text-sm text-gray-400">
+                    Tổng thanh toán
+                  </p>
+
+                  <p className="text-3xl font-bold text-green-600">
+                    {Number(
+                      booking.finalAmount,
+                    ).toLocaleString("vi-VN")}{" "}
+                    đ
+                  </p>
+                </div>
+
+                {booking.paymentStatus === "PENDING" && (
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/payment?bookingCode=${booking.bookingCode}&amount=${booking.finalAmount}`,
+                      )
+                    }
+                    className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all"
+                  >
+                    Thanh toán ngay
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
+
+);
 };
 
 export default MyBooking;

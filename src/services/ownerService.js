@@ -41,3 +41,31 @@ export const uploadRoomImageApi = (roomId, formData) => {
     },
   });
 };
+// --- QUẢN LÝ AVAILABILITY ---
+
+export const getAvailabilityBlocksApi = ({
+  roomTypeId,
+  checkInDate,
+  checkOutDate,
+  quantity = 1,
+}) => {
+  return axiosClient.get("/owner/availability", {
+    params: {
+      roomTypeId,
+      checkInDate,
+      checkOutDate,
+      quantity,
+    },
+  });
+};
+
+export const createAvailabilityBlockApi = (data) => {
+  return axiosClient.post("/owner/availability-blocks", data);
+};
+
+export const deleteAvailabilityBlockApi = (blockId) => {
+  return axiosClient.delete(`/owner/availability-blocks/${blockId}`);
+};
+export const getOwnerBookingsApi = () => {
+  return axiosClient.get("/owner/bookings");
+};

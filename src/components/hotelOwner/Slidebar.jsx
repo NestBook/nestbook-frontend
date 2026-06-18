@@ -3,9 +3,15 @@ import { assets } from "../../assets/assets";
 
 const Slidebar = () => {
   const sidebarLink = [
-    { name: "Dashboard", path: "/owner", icon: assets.dashboardIcon }, // Thêm dấu phẩy
-    { name: "Add Room", path: "/owner/add-room", icon: assets.addIcon }, // Thêm dấu phẩy và sửa "add-romm"
+    { name: "Dashboard", path: "/owner", icon: assets.dashboardIcon },
+    { name: "Add Room", path: "/owner/add-room", icon: assets.addIcon },
     { name: "List Room", path: "/owner/list-room", icon: assets.listIcon },
+    // THÊM DÒNG NÀY: Dẫn sang trang Quản lý Availability
+    {
+      name: "Availability",
+      path: "/owner/availability",
+      icon: assets.calenderIcon,
+    },
   ];
 
   return (

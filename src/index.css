@@ -1,15 +1,17 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap");
 @import "tailwindcss";
 
 @theme {
   --color-primary: #2563eb;
   --color-secondary: #fbbf24;
+
+  --font-poppins: "Poppins", sans-serif;
 }
 
 * {
-  font-family: Outfit;
+  font-family: "Poppins", sans-serif;
 }
 
 .font-playfair {
-  font-family: Playfair !important  ;
+  font-family: "Playfair", serif !important;
 }
