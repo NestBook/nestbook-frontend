@@ -66,3 +66,6 @@ export const createAvailabilityBlockApi = (data) => {
 export const deleteAvailabilityBlockApi = (blockId) => {
   return axiosClient.delete(`/owner/availability-blocks/${blockId}`);
 };
+export const getOwnerBookingsApi = () => {
+  return axiosClient.get("/owner/bookings");
+};

@@ -27,7 +27,6 @@ const Hotels = () => {
     description: "",
   });
 
-  // State lưu file ảnh và link xem trước
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
@@ -52,9 +51,9 @@ const Hotels = () => {
 
   useEffect(() => {
     loadHotels();
+    loadOwners();
   }, []);
 
-  // Hàm xử lý khi người dùng chọn ảnh
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -63,7 +62,6 @@ const Hotels = () => {
     }
   };
 
-  // Hàm reset form
   const resetForm = () => {
     setForm({ name: "", city: "", address: "", phone: "", description: "" });
     setImageFile(null);
@@ -73,7 +71,6 @@ const Hotels = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const hotelPayload = {
         name: form.name,
@@ -84,11 +81,7 @@ const Hotels = () => {
       };
 
       if (editingHotel) {
-        // --- CHẾ ĐỘ EDIT: UPDATE TEXT VÀ UPLOAD ẢNH ---
-        // 1. Cập nhật thông tin text
         await updateHotelApi(editingHotel.id, hotelPayload);
-
-        // 2. Nếu admin có đính kèm ảnh mới thì up lên
         if (imageFile) {
           const uploadData = new FormData();
           uploadData.append("file", imageFile);
@@ -96,7 +89,6 @@ const Hotels = () => {
         }
         alert("Cập nhật thông tin và hình ảnh thành công!");
       } else {
-        // --- CHẾ ĐỘ CREATE: CHỈ TẠO KHUNG TEXT ---
         await createHotelApi(hotelPayload);
         alert("Thêm khách sạn thành công! Vui lòng bấm 'Edit' để tải ảnh lên.");
       }
@@ -118,13 +110,9 @@ const Hotels = () => {
       phone: hotel.phone ?? "",
       description: hotel.description ?? "",
     });
-
-    // Hiển thị ảnh cũ nếu có
     setImageFile(null);
     const existingImage = hotel.images?.[0]?.url || hotel.images?.[0] || "";
     setImagePreview(existingImage);
-
-    // Cuộn lên đầu trang để admin dễ thao tác
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -172,7 +160,6 @@ const Hotels = () => {
         <p className="text-gray-800 font-medium mb-4">
           {editingHotel ? "Chỉnh sửa khách sạn" : "Thêm khách sạn mới"}
         </p>
-
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <p className="text-gray-800 text-sm mb-1">Hotel Name</p>
@@ -184,7 +171,6 @@ const Hotels = () => {
               required
             />
           </div>
-
           <div>
             <p className="text-gray-800 text-sm mb-1">City</p>
             <input
@@ -195,7 +181,6 @@ const Hotels = () => {
               required
             />
           </div>
-
           <div>
             <p className="text-gray-800 text-sm mb-1">Address</p>
             <input
@@ -206,7 +191,6 @@ const Hotels = () => {
               required
             />
           </div>
-
           <div>
             <p className="text-gray-800 text-sm mb-1">Phone</p>
             <input
@@ -217,8 +201,6 @@ const Hotels = () => {
               required
             />
           </div>
-
-          {/* CHỈ HIỆN KHU VỰC UP ẢNH KHI ĐANG Ở CHẾ ĐỘ EDIT */}
           {editingHotel && (
             <div className="md:col-span-2 flex flex-col md:flex-row gap-6 items-start border border-dashed border-gray-300 p-4 rounded-lg mt-2 bg-gray-50 transition-all duration-300">
               <div className="flex-1 w-full">
@@ -231,12 +213,7 @@ const Hotels = () => {
                   onChange={handleImageChange}
                   className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                 />
-                <p className="text-xs text-gray-400 mt-2">
-                  Định dạng hỗ trợ: JPG, PNG, WEBP.
-                </p>
               </div>
-
-              {/* Vùng xem trước ảnh */}
               {imagePreview && (
                 <div className="w-full md:w-48 h-32 relative rounded overflow-hidden shadow-sm border border-gray-200 bg-white">
                   <img
@@ -249,7 +226,6 @@ const Hotels = () => {
             </div>
           )}
         </div>
-
         <div className="mt-4">
           <p className="text-gray-800 text-sm mb-1">Description</p>
           <textarea
@@ -260,7 +236,6 @@ const Hotels = () => {
             className="border border-gray-300 mt-1 rounded p-2 w-full focus:outline-none focus:border-blue-500 text-sm resize-none"
           />
         </div>
-
         <div className="flex gap-3 mt-6">
           <button
             type="submit"
@@ -268,7 +243,6 @@ const Hotels = () => {
           >
             {editingHotel ? "UPDATE & UPLOAD" : "CREATE HOTEL"}
           </button>
-
           {editingHotel && (
             <button
               type="button"
@@ -281,16 +255,11 @@ const Hotels = () => {
         </div>
       </form>
 
-      {/* BẢNG DANH SÁCH */}
       <p className="text-gray-600 mb-3">All Hotels</p>
 
       <div className="w-full text-left border border-gray-300 rounded-lg overflow-hidden bg-white">
         {loading ? (
           <p className="text-center text-gray-400 py-10 text-sm">Đang tải...</p>
-        ) : hotels.length === 0 ? (
-          <p className="text-center text-gray-400 py-10 text-sm">
-            Chưa có khách sạn nào.
-          </p>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -298,11 +267,8 @@ const Hotels = () => {
                 <th className="py-3 px-4 text-gray-800 font-medium text-left">
                   Name
                 </th>
-                <th className="py-3 px-4 text-gray-800 font-medium text-left max-sm:hidden">
-                  City
-                </th>
-                <th className="py-3 px-4 text-gray-800 font-medium text-left max-sm:hidden">
-                  Phone
+                <th className="py-3 px-4 text-gray-800 font-medium text-left">
+                  Owner
                 </th>
                 <th className="py-3 px-4 text-gray-800 font-medium text-center">
                   Action
@@ -313,44 +279,38 @@ const Hotels = () => {
               {hotels.map((hotel) => (
                 <tr key={hotel.id} className="hover:bg-gray-50 transition">
                   <td className="py-3 px-4 text-gray-700 border-t border-gray-200">
-                    <div className="flex items-center gap-3">
-                      {hotel.images?.[0] ? (
-                        <img
-                          src={hotel.images[0].url || hotel.images[0]}
-                          className="w-10 h-10 rounded object-cover border border-gray-200"
-                          alt="thumbnail"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded border border-gray-200 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                          No Img
-                        </div>
-                      )}
-                      <span className="font-medium">{hotel.name}</span>
-                    </div>
+                    {hotel.name}
                   </td>
-                  <td className="py-3 px-4 text-gray-700 border-t border-gray-200 max-sm:hidden">
-                    {hotel.city}
+
+                  {/* Cột Owner mới */}
+                  <td className="py-3 px-4 border-t text-gray-700">
+                    {hotel.ownerId ? (
+                      <span className="text-green-600 font-medium">
+                        {ownersList.find((o) => o.id == hotel.ownerId)
+                          ?.fullName || `ID: ${hotel.ownerId}`}
+                      </span>
+                    ) : (
+                      <span className="text-red-400 italic">None</span>
+                    )}
                   </td>
-                  <td className="py-3 px-4 text-gray-700 border-t border-gray-200 max-sm:hidden">
-                    {hotel.phone}
-                  </td>
-                  <td className="py-3 px-4 border-t border-gray-200 text-center">
+
+                  <td className="py-3 px-4 border-t text-center">
                     <div className="flex justify-center gap-3">
                       <button
                         onClick={() => handleEdit(hotel)}
-                        className="text-blue-500 hover:text-blue-700 text-xs font-medium transition"
+                        className="text-blue-500 hover:text-blue-700 text-xs font-medium"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleOpenAssignModal(hotel)}
-                        className="text-green-500 hover:text-green-700 text-xs font-medium transition"
+                        className="text-green-500 hover:text-green-700 text-xs font-medium border-b border-dashed border-green-500"
                       >
-                        Owner
+                        {hotel.ownerId ? "Re-assign" : "Assign"}
                       </button>
                       <button
                         onClick={() => handleDelete(hotel.id)}
-                        className="text-red-500 hover:text-red-700 text-xs font-medium transition"
+                        className="text-red-500 hover:text-red-700 text-xs font-medium"
                       >
                         Delete
                       </button>
@@ -363,47 +323,37 @@ const Hotels = () => {
         )}
       </div>
 
-      {/* MODAL GÁN OWNER */}
       {assigningHotel && (
-        <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-semibold mb-4">
               Gán Owner cho:{" "}
               <span className="text-blue-600">{assigningHotel.name}</span>
             </h3>
-
             <form onSubmit={handleAssignSubmit}>
-              <p className="text-sm text-gray-600 mb-2">
-                Chọn tài khoản Owner:
-              </p>
               <select
-                className="w-full border border-gray-300 rounded p-2 mb-6 focus:outline-none focus:border-blue-500"
+                className="w-full border border-gray-300 rounded p-2 mb-6"
                 value={selectedOwnerId}
                 onChange={(e) => setSelectedOwnerId(e.target.value)}
               >
                 <option value="">-- Chọn Owner --</option>
                 {ownersList.map((owner) => (
                   <option key={owner.id} value={owner.id}>
-                    {owner.fullName || owner.email || owner.username} - ID:{" "}
-                    {owner.id}
+                    {owner.email || owner.username} - ID: {owner.id}
                   </option>
                 ))}
               </select>
-
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAssigningHotel(null);
-                    setSelectedOwnerId("");
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50"
+                  onClick={() => setAssigningHotel(null)}
+                  className="px-4 py-2 border rounded text-sm text-gray-600"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                  className="px-4 py-2 bg-green-600 text-white rounded text-sm"
                 >
                   Xác nhận Gán
                 </button>

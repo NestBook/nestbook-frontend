@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import StarRating from "../components/StarRating";
 import {
   getHotelDetailApi,
   getHotelRoomTypesApi,
-  bookingQuoteApi,
+  getHotelRatingApi,
 } from "../services/publicService";
+import RoomBookingQuote from "../components/RoomBookingQuote";
+import RoomReviews from "../components/RoomReviews";
 
-// Helper Functions cho Validate Ngày
 const getTodayString = () => {
   const d = new Date();
   const y = d.getFullYear();
@@ -30,46 +31,48 @@ const getNextDayString = (dateStr) => {
 
 const RoomDetails = () => {
   const { id } = useParams();
+  console.log("RoomDetails component mounted with hotel ID:", id);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [hotel, setHotel] = useState(null);
   const [roomTypes, setRoomTypes] = useState([]);
   const [mainImage, setMainImage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const [selectedRoomId, setSelectedRoomId] = useState("");
-  const [quoteResult, setQuoteResult] = useState(null);
-  const [quoteError, setQuoteError] = useState("");
-  const [isQuoting, setIsQuoting] = useState(false);
-
-  // (NEW) State ngày tháng (Khởi tạo mặc định lấy từ URL tìm kiếm sang)
-  const today = getTodayString();
-  const [checkIn, setCheckIn] = useState(searchParams.get("checkInDate") || "");
-  const [checkOut, setCheckOut] = useState(
-    searchParams.get("checkOutDate") || "",
-  );
-
-  // (NEW) Hàm xử lý đổi ngày thông minh
-  const handleCheckInChange = (e) => {
-    const val = e.target.value;
-    setCheckIn(val);
-
-    // Nếu ngày Check-out đang có mà lại <= ngày Check-in mới thì tự đẩy lên
-    if (checkOut && val >= checkOut) {
-      setCheckOut(getNextDayString(val));
-    }
-  };
+  const [ratingStats, setRatingStats] = useState({ avgRating: 0, totalReviews: 0 });
 
   useEffect(() => {
     const fetchHotelInfo = async () => {
       try {
+        console.log("Fetching hotel info for ID:", id);
         setLoading(true);
-        const [hotelRes, roomsRes] = await Promise.all([
-          getHotelDetailApi(id),
-          getHotelRoomTypesApi(id),
-        ]);
+        let hotelRes, roomsRes;
+        let ratData = { avgRating: 0, totalReviews: 0 };
 
-        const hotelData = hotelRes.data?.data ?? hotelRes.data;
+        try {
+          const res = await Promise.all([
+            getHotelDetailApi(id),
+            getHotelRoomTypesApi(id),
+          ]);
+          hotelRes = res[0];
+          roomsRes = res[1];
+        } catch (err) {
+          console.error("Lỗi khi tải thông tin chính của khách sạn", err);
+          throw err; // Ném lỗi để nhảy vào catch ngoài và hiển thị lỗi
+        }
+
+        try {
+          const ratingRes = await getHotelRatingApi(id);
+          ratData = ratingRes.data?.data ?? ratingRes.data ?? { avgRating: 0, totalReviews: 0 };
+        } catch (err) {
+          console.warn("Lỗi khi tải rating khách sạn (có thể do chưa đăng nhập):", err);
+        }
+
+        console.log("Hotel Detail API response:", { hotelRes, roomsRes });
+
+        // Backend bọc double-nested: { success: true, data: { success: true, data: {...} } }
+        const hotelData = hotelRes.data?.data?.data ?? hotelRes.data?.data ?? hotelRes.data;
         const roomsPayload = roomsRes.data?.data ?? roomsRes.data;
 
         const roomsArray = Array.isArray(roomsPayload)
@@ -86,49 +89,30 @@ const RoomDetails = () => {
 
         setHotel({ ...hotelData, _galleryImages: allImages });
         setRoomTypes(roomsArray);
+        setRatingStats(ratData);
 
-        if (allImages.length > 0) {
-          setMainImage(allImages[0]);
-        } else {
-          setMainImage("https://picsum.photos/800/500");
-        }
+        if (allImages.length > 0) setMainImage(allImages[0]);
+        else setMainImage("https://picsum.photos/800/500");
 
-        if (roomsArray.length > 0) {
-          setSelectedRoomId(roomsArray[0].id);
-        }
       } catch (error) {
-        console.error("Lỗi khi tải chi tiết khách sạn", error);
+        console.error("Lỗi khi tải thông tin khách sạn", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchHotelInfo();
+    if (id) {
+      fetchHotelInfo();
+    }
   }, [id]);
 
-  const handleCheckQuote = async (e) => {
-    e.preventDefault();
-    setQuoteError("");
-    setQuoteResult(null);
-    setIsQuoting(true);
-
+  const handleReviewSubmitted = async () => {
     try {
-      const payload = {
-        roomTypeId: selectedRoomId,
-        quantity: Number(e.target.guests.value),
-        checkInDate: checkIn, // Dùng state thay cho e.target
-        checkOutDate: checkOut, // Dùng state thay cho e.target
-      };
-
-      const res = await bookingQuoteApi(payload);
-      setQuoteResult(res.data?.data ?? res.data);
-    } catch (error) {
-      setQuoteError(
-        error.response?.data?.error?.message ||
-          "Hết phòng trong thời gian này, vui lòng chọn ngày khác!",
-      );
-    } finally {
-      setIsQuoting(false);
+      const ratingRes = await getHotelRatingApi(id);
+      const ratData = ratingRes.data?.data ?? ratingRes.data ?? { avgRating: 0, totalReviews: 0 };
+      setRatingStats(ratData);
+    } catch (err) {
+      console.error("Lỗi khi tải điểm đánh giá:", err);
     }
   };
 
@@ -153,8 +137,10 @@ const RoomDetails = () => {
       </div>
 
       <div className="flex items-center gap-1 mt-2">
-        <StarRating rating={hotel.averageRating || 5} />
-        <p className="ml-2">{hotel.reviewCount || 0} Reviews</p>
+        <StarRating rating={Math.round(ratingStats.avgRating) || 5} />
+        <p className="ml-2">
+          {ratingStats.avgRating > 0 ? ratingStats.avgRating.toFixed(1) : "0.0"} ({ratingStats.totalReviews} Reviews)
+        </p>
       </div>
 
       <div className="flex items-center gap-1 text-gray-500 mt-2">
@@ -188,118 +174,12 @@ const RoomDetails = () => {
         </div>
       </div>
 
-      <div className="mt-16 bg-gray-50 p-6 rounded-xl border border-gray-200">
-        <h2 className="text-2xl font-playfair mb-6">
-          Booking Quote (Kiểm tra báo giá)
-        </h2>
-
-        <form
-          onSubmit={handleCheckQuote}
-          className="flex flex-col md:flex-row items-start md:items-end gap-4 text-gray-700"
-        >
-          <div className="flex flex-col flex-1">
-            <label className="font-medium text-sm mb-1">Loại phòng</label>
-            <select
-              className="border border-gray-300 rounded px-3 py-2.5 outline-none bg-white"
-              value={selectedRoomId}
-              onChange={(e) => setSelectedRoomId(e.target.value)}
-              required
-            >
-              {roomTypes.map((rt) => (
-                <option key={rt.id} value={rt.id}>
-                  {rt.name} - {rt.price?.toLocaleString("vi-VN")} đ/đêm
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label className="font-medium text-sm mb-1">Check-In</label>
-            <input
-              type="date"
-              id="checkInDate"
-              required
-              min={today} // (NEW) Khóa check-in từ hôm nay
-              value={checkIn}
-              onChange={handleCheckInChange}
-              className="border border-gray-300 rounded px-3 py-2.5 outline-none bg-white"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="font-medium text-sm mb-1">Check-Out</label>
-            <input
-              type="date"
-              id="checkOutDate"
-              required
-              min={
-                checkIn ? getNextDayString(checkIn) : getNextDayString(today)
-              } // (NEW) Check-out động
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2.5 outline-none bg-white"
-            />
-          </div>
-
-          <div className="flex flex-col w-24">
-            <label className="font-medium text-sm mb-1">Số lượng</label>
-            <input
-              type="number"
-              id="guests"
-              min="1"
-              required
-              defaultValue={searchParams.get("quantity") || 1}
-              className="border border-gray-300 rounded px-3 py-2.5 outline-none bg-white"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isQuoting}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-8 rounded transition-all cursor-pointer disabled:bg-gray-400"
-          >
-            {isQuoting ? "Đang tính..." : "Báo Giá"}
-          </button>
-        </form>
-
-        {quoteError && (
-          <div className="mt-6 p-4 bg-red-50 text-red-600 rounded border border-red-200">
-            ⚠ {quoteError}
-          </div>
-        )}
-
-        {quoteResult && quoteResult.canBook !== false && (
-          <div className="mt-6 p-6 bg-white rounded shadow-sm border border-green-200">
-            <h3 className="text-lg font-semibold text-green-700 mb-4">
-              Phòng còn trống!
-            </h3>
-            <div className="flex justify-between border-b pb-2 mb-2 text-gray-600">
-              <span>Giá mỗi đêm:</span>
-              <span>
-                {quoteResult.pricePerNight?.toLocaleString("vi-VN")} đ
-              </span>
-            </div>
-            <div className="flex justify-between border-b pb-2 mb-2 text-gray-600">
-              <span>Số đêm lưu trú:</span>
-              <span>x {quoteResult.nights} đêm</span>
-            </div>
-            <div className="flex justify-between border-b pb-2 mb-2 text-gray-600">
-              <span>Số lượng phòng:</span>
-              <span>x {quoteResult.quantity} phòng</span>
-            </div>
-            <div className="flex justify-between mt-4 text-xl font-bold text-gray-800">
-              <span>Tổng thanh toán:</span>
-              <span className="text-blue-600">
-                {quoteResult.finalAmount?.toLocaleString("vi-VN")} đ
-              </span>
-            </div>
-
-            <button className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded text-lg transition-all">
-              Tiếp tục Đặt phòng
-            </button>
-          </div>
-        )}
-      </div>
+      <RoomBookingQuote
+        hotelId={id}
+        roomTypes={roomTypes}
+        searchParams={searchParams}
+        navigate={navigate}
+      />
 
       <div className="max-w-3xl border-t border-gray-300 my-15 py-10 text-gray-500 mt-16">
         <h3 className="text-xl text-gray-800 font-medium mb-4">
@@ -307,6 +187,12 @@ const RoomDetails = () => {
         </h3>
         <p>{hotel.description || "Chưa có mô tả chi tiết."}</p>
       </div>
+
+      <RoomReviews
+        hotelId={id}
+        ratingStats={ratingStats}
+        onReviewSubmitted={handleReviewSubmitted}
+      />
     </div>
   );
 };
