@@ -27,8 +27,6 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Hotels", path: "/rooms" },
-    { name: "Experiences", path: "/experiences" },
-    { name: "About", path: "/about" },
   ];
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -134,14 +132,6 @@ const Navbar = () => {
 
       {/* Desktop Right (Search & Auth) */}
       <div className="hidden md:flex items-center gap-4">
-        <img
-          src={assets.searchIcon}
-          alt="search"
-          className={`${
-            isScrolled ? "invert" : ""
-          } h-7 transition-all duration-500`}
-        />
-
         {user ? (
           // Custom User Dropdown - ĐÃ CĂN CHỈNH KIỂU CHỮ
           <div className="relative ml-4" ref={dropdownRef}>

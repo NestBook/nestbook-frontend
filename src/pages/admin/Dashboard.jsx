@@ -195,7 +195,7 @@ const Dashboard = () => {
                   <td className="py-3 px-4 text-center">
                     <Link
                       to="/admin/hotels"
-                      className="text-blue-600 hover:text-blue-800 font-medium transition"
+                      className="text-blue-600 hover:text-blue-800 transition"
                     >
                       Tới trang quản lý
                     </Link>

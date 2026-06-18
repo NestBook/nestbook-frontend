@@ -1,20 +1,55 @@
 import { assets, cities } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+// Hàm lấy ngày hiện tại (Format: YYYY-MM-DD)
+const getTodayString = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+// Hàm tính ngày hôm sau (Tránh lỗi Timezone của Javascript)
+const getNextDayString = (dateStr) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  const d = new Date(year, month - 1, day);
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+};
 
 const Hero = () => {
   const navigate = useNavigate();
 
+  // (NEW) State quản lý ngày tháng để làm Validate
+  const today = getTodayString();
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+
+  const handleCheckInChange = (e) => {
+    const newCheckIn = e.target.value;
+    setCheckIn(newCheckIn);
+
+    // Auto-Validate: Nếu checkOut hiện tại đang nhỏ hơn hoặc bằng checkIn mới -> Tự dời checkOut sang hôm sau
+    if (checkOut && newCheckIn >= checkOut) {
+      setCheckOut(getNextDayString(newCheckIn));
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     const city = e.target.destinationInput.value;
-    const checkInDate = e.target.checkIn.value;
-    const checkOutDate = e.target.checkOut.value;
     const quantity = e.target.guests.value;
 
     const query = new URLSearchParams({
       city,
-      checkInDate,
-      checkOutDate,
+      checkInDate: checkIn,
+      checkOutDate: checkOut,
       quantity,
     }).toString();
 
@@ -66,6 +101,9 @@ const Hero = () => {
             id="checkIn"
             type="date"
             required
+            min={today} // (NEW) Khóa ngày quá khứ
+            value={checkIn}
+            onChange={handleCheckInChange}
             className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
           />
         </div>
@@ -79,6 +117,9 @@ const Hero = () => {
             id="checkOut"
             type="date"
             required
+            min={checkIn ? getNextDayString(checkIn) : getNextDayString(today)} // (NEW) Ép Check-out phải sau Check-in
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
             className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
           />
         </div>
