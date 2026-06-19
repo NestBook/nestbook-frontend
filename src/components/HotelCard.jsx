@@ -4,7 +4,6 @@ import { assets } from "../assets/assets";
 const HotelCard = ({ hotel, room, index }) => {
   // (NEW) Bắt lấy chuỗi query hiện tại trên URL (ví dụ: ?city=HN&checkInDate=2026-06-20...)
   const location = useLocation();
-
   const data = hotel || room;
   if (!data) return null;
 

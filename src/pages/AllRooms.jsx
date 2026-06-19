@@ -32,7 +32,6 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
 
 const AllRooms = () => {
   const [searchParams] = useSearchParams();
-
   // State lưu dữ liệu gốc từ API
   const [originalHotels, setOriginalHotels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,15 +64,20 @@ const AllRooms = () => {
           quantity: searchParams.get("quantity") || 1,
         };
 
+        // 1. Gọi API Search (BE chỉ trả về ID và rooms)
         const res = await searchHotelsApi(params);
         const searchResults = res.data?.data ?? res.data ?? [];
 
+        // 2. Tự động dùng vòng lặp gọi API Detail để lấy Tên và Hình ảnh
         const detailedHotels = await Promise.all(
           searchResults.map(async (searchItem) => {
             try {
               const detailRes = await getHotelDetailApi(searchItem.id);
               const hotelInfo = detailRes.data?.data ?? detailRes.data;
+              console.log("searchItem.rooms:", searchItem.rooms);
+              console.log("hotelInfo:", hotelInfo);
 
+              // Tính giá rẻ nhất từ danh sách phòng trả về
               const minPrice =
                 searchItem.rooms?.length > 0
                   ? Math.min(
@@ -82,13 +86,14 @@ const AllRooms = () => {
                       ),
                     )
                   : 0;
-
+              console.log("minPrice:", minPrice);
               return {
                 ...hotelInfo,
                 minPricePerNight: minPrice,
                 availableRoomTypes: searchItem.rooms,
               };
-            } catch {
+            } catch (err) {
+              console.error(`Lỗi tải chi tiết hotel ${searchItem.id}`, err);
               return null;
             }
           }),
@@ -149,7 +154,6 @@ const AllRooms = () => {
     setSelectedPriceRanges([]);
     setSelectedSort("Newest First");
   };
-
   return (
     <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
       <div className="flex-1 w-full lg:mr-8">

@@ -27,7 +27,6 @@ const getNextDayString = (dateStr) => {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${dd}`;
 };
-
 const RoomDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -59,7 +58,6 @@ const RoomDetails = () => {
       setCheckOut(getNextDayString(val));
     }
   };
-
   useEffect(() => {
     const fetchHotelInfo = async () => {
       try {
@@ -72,27 +70,30 @@ const RoomDetails = () => {
         const hotelData = hotelRes.data?.data ?? hotelRes.data;
         const roomsPayload = roomsRes.data?.data ?? roomsRes.data;
 
+        // BÓC TÁCH MẢNG ROOM TYPES
         const roomsArray = Array.isArray(roomsPayload)
           ? roomsPayload
           : roomsPayload?.roomTypes || [];
 
+        // --- GỘP ẢNH HOTEL + ẢNH TỪ TẤT CẢ ROOM TYPES THÀNH 1 GALLERY ---
         const hotelImgs = (hotelData?.images ?? []).map(
           (img) => img?.url || img,
         );
         const roomImgs = roomsArray.flatMap((rt) =>
           (rt.images ?? []).map((img) => img?.url || img),
         );
-        const allImages = [...new Set([...hotelImgs, ...roomImgs])];
+        const allImages = [...new Set([...hotelImgs, ...roomImgs])]; // Loại bỏ ảnh trùng lặp
 
+        // Lưu thông tin khách sạn kèm theo mảng ảnh tổng hợp
         setHotel({ ...hotelData, _galleryImages: allImages });
         setRoomTypes(roomsArray);
-
         if (allImages.length > 0) {
           setMainImage(allImages[0]);
         } else {
           setMainImage("https://picsum.photos/800/500");
         }
 
+        // Set giá trị select box mặc định
         if (roomsArray.length > 0) {
           setSelectedRoomId(roomsArray[0].id);
         }
@@ -141,6 +142,7 @@ const RoomDetails = () => {
   if (!hotel)
     return <div className="py-30 text-center">Không tìm thấy khách sạn!</div>;
 
+  // Lấy mảng ảnh tổng hợp đã gộp ở useEffect
   const hotelImages = hotel._galleryImages ?? [];
 
   return (
@@ -178,7 +180,7 @@ const RoomDetails = () => {
             <img
               onClick={() => setMainImage(img)}
               key={index}
-              src={img}
+              src={img} // Vì logic ở trên đã bóc tách img thành URL string
               alt="Hotel thumbnail"
               className={`w-full h-48 rounded-xl shadow-md object-cover cursor-pointer ${
                 mainImage === img ? "outline-3 outline-orange-500" : ""
