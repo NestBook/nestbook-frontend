@@ -223,6 +223,10 @@ const RoomBookingQuote = ({ hotelId, roomTypes, searchParams, navigate }) => {
               <span>Số lượng phòng:</span>
               <span>x {quoteResult.quantity} phòng</span>
             </div>
+            <div className="flex justify-between border-b pb-2 mb-2 text-gray-600">
+              <span>Số phòng còn trống:</span>
+              <span className="text-green-600 font-semibold">{quoteResult.availableQuantity} phòng</span>
+            </div>
             <div className="flex justify-between mt-4 text-xl font-bold text-gray-800">
               <span>Tổng thanh toán:</span>
               <span className="text-blue-600">
