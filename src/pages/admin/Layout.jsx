@@ -1,6 +1,10 @@
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Layout = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <div className="flex min-h-screen font-poppins text-gray-800 bg-gray-50">
       {/* Thêm flex flex-col để chia bố cục trên/dưới cho Sidebar */}
@@ -28,13 +32,16 @@ const Layout = () => {
           </Link>
         </nav>
 
-        {/* Nút quay về trang chủ */}
+        {/* Nút đăng xuất */}
         <div className="p-5 border-t border-gray-200">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 font-medium transition"
+          <button
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+            className="w-full flex items-center justify-center gap-2 text-sm text-red-500 hover:text-red-700 font-medium transition bg-red-50 hover:bg-red-100 py-2.5 rounded-lg cursor-pointer"
           >
-            {/* Icon mũi tên quay lại */}
+            {/* Icon đăng xuất (Logout) */}
             <svg
               className="w-4 h-4"
               fill="none"
@@ -45,11 +52,11 @@ const Layout = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            Quay về trang chủ
-          </Link>
+            Đăng xuất
+          </button>
         </div>
       </aside>
 
