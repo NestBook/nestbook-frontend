@@ -33,13 +33,13 @@ const Login = () => {
       if (!payload.user) {
         payload.user = { role: "CUSTOMER" };
       } else {
-        // Kiểm tra nếu BE trả về mảng 'roles' (dạng object [{code: 'HOTEL_OWNER'}] hoặc mảng string)
+
         if (payload.user.roles && payload.user.roles.length > 0) {
           const firstRole = payload.user.roles[0];
-          // Lấy mã code (nếu là object) hoặc lấy luôn giá trị (nếu là chuỗi)
+
           payload.user.role = firstRole.code || firstRole || "CUSTOMER";
         }
-        // Nếu không có role nào, gán mặc định là Khách
+
         else if (!payload.user.role) {
           payload.user.role = "CUSTOMER";
         }
@@ -56,8 +56,8 @@ const Login = () => {
       console.error(error);
       setErrorMessage(
         error?.response?.data?.error?.message ||
-          error?.response?.data?.message ||
-          "Sai email hoặc mật khẩu!",
+        error?.response?.data?.message ||
+        "Sai email hoặc mật khẩu!",
       );
     } finally {
       setIsLoading(false);
@@ -65,7 +65,7 @@ const Login = () => {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log("🚀 Google Trả Về:", credentialResponse);
+    console.log(" Google Trả Về:", credentialResponse);
 
     if (!credentialResponse || !credentialResponse.credential) {
       setErrorMessage(
@@ -161,11 +161,10 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-3 rounded text-white transition-all ${
-              isLoading
+            className={`w-full py-3 rounded text-white transition-all ${isLoading
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-black hover:bg-gray-800"
-            }`}
+              }`}
           >
             {isLoading ? "Đang xử lý..." : "Đăng nhập hệ thống"}
           </button>

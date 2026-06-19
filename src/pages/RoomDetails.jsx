@@ -57,7 +57,7 @@ const RoomDetails = () => {
           roomsRes = res[1];
         } catch (err) {
           console.error("Lỗi khi tải thông tin chính của khách sạn", err);
-          throw err; // Ném lỗi để nhảy vào catch ngoài và hiển thị lỗi
+          throw err;
         }
 
         try {
@@ -163,9 +163,8 @@ const RoomDetails = () => {
               key={index}
               src={img}
               alt="Hotel thumbnail"
-              className={`w-full h-48 rounded-xl shadow-md object-cover cursor-pointer ${
-                mainImage === img ? "outline-3 outline-orange-500" : ""
-              }`}
+              className={`w-full h-48 rounded-xl shadow-md object-cover cursor-pointer ${mainImage === img ? "outline-3 outline-orange-500" : ""
+                }`}
             />
           ))}
         </div>

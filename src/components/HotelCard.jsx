@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 
 const HotelCard = ({ hotel, room, index }) => {
-  // (NEW) Bắt lấy chuỗi query hiện tại trên URL (ví dụ: ?city=HN&checkInDate=2026-06-20...)
+  //Bắt lấy chuỗi query hiện tại trên URL 
   const location = useLocation();
   const data = hotel || room;
   if (!data) return null;
@@ -13,9 +13,9 @@ const HotelCard = ({ hotel, room, index }) => {
   const city = data.city || data.hotel?.city;
   const rating = data.averageRating || 5.0;
 
-  // Quyết định nhãn Best Seller dựa trên số lượt đánh giá và điểm số thực tế
-  const isBestSeller = data.reviewCount > 0 
-    ? (rating >= 4.5) 
+
+  const isBestSeller = data.reviewCount > 0
+    ? (rating >= 4.5)
     : (index % 2 === 0);
 
   // --- LOGIC TÍNH GIÁ ---
