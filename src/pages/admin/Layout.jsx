@@ -19,6 +19,13 @@ const Layout = () => {
           >
             Hotels
           </Link>
+
+          <Link
+            to="/admin/reviews"
+            className="px-5 py-3 hover:bg-gray-100 transition"
+          >
+            Reviews
+          </Link>
         </nav>
 
         {/* Nút quay về trang chủ */}

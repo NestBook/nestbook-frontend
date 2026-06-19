@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import HotelCard from "./HotelCard";
 import Title from "./Title";
 import { useNavigate } from "react-router-dom";
-import { searchHotelsApi, getHotelDetailApi } from "../services/publicService";
+import { searchHotelsApi, getHotelDetailApi, getHotelRatingApi } from "../services/publicService";
 
 const FeaturedDestination = () => {
   const navigate = useNavigate();
@@ -13,35 +13,58 @@ const FeaturedDestination = () => {
     const fetchHotels = async () => {
       try {
         setLoading(true);
-        // Thay vì gọi getHotelsApi, ta gọi hàm Search rỗng để lấy toàn bộ ID
         const res = await searchHotelsApi({});
-        const searchResults = res.data?.data ?? res.data ?? [];
+        const searchResults = res.data?.data?.data ?? res.data?.data ?? res.data ?? [];
 
-        // Cắt lấy 3 khách sạn đầu tiên
         const topIds = searchResults.slice(0, 8);
 
-        // Tự động gọi API Detail đắp dữ liệu
         const detailedHotels = await Promise.all(
           topIds.map(async (searchItem) => {
-            try {
-              const detailRes = await getHotelDetailApi(searchItem.id);
-              const hotelInfo = detailRes.data?.data ?? detailRes.data;
+            // Lấy ID một cách an toàn, thử cả 'id' và '_id'
+            const hotelId = searchItem.id || searchItem._id;
 
+            // Nếu không có ID thì bỏ qua, tránh gọi API lỗi
+            if (!hotelId) return null;
+
+            try {
+              let hotelInfo = null;
+              let ratingData = { avgRating: 0, totalReviews: 0 };
+
+              try {
+                const detailRes = await getHotelDetailApi(hotelId);
+                hotelInfo = detailRes.data?.data?.data ?? detailRes.data?.data ?? detailRes.data;
+              } catch (err) {
+                console.error(`Lỗi lấy chi tiết hotel ${hotelId}`, err);
+                return null;
+              }
+
+              try {
+                const ratingRes = await getHotelRatingApi(hotelId);
+                ratingData = ratingRes.data?.data ?? ratingRes.data ?? { avgRating: 0, totalReviews: 0 };
+              } catch (err) {
+                console.warn(`Lỗi lấy rating cho hotel ${hotelId} (chưa đăng nhập):`, err);
+              }
+
+              const roomsList = searchItem.availableRoomTypes || searchItem.rooms || [];
               const minPrice =
-                searchItem.rooms?.length > 0
+                searchItem.minPricePerNight ||
+                (roomsList.length > 0
                   ? Math.min(
-                      ...searchItem.rooms.map(
+                      ...roomsList.map(
                         (r) => r.pricePerNight || r.price || 0,
                       ),
                     )
-                  : 0;
+                  : 0);
 
               return {
                 ...hotelInfo,
                 minPricePerNight: minPrice,
+                availableRoomTypes: roomsList,
+                averageRating: ratingData.avgRating > 0 ? ratingData.avgRating : 5.0,
+                reviewCount: ratingData.totalReviews,
               };
             } catch (error) {
-              console.error(`Lỗi lấy chi tiết hotel ${searchItem.id}`, error);
+              console.error(`Lỗi lấy chi tiết hotel ${hotelId}`, error);
               return null;
             }
           }),
@@ -76,7 +99,11 @@ const FeaturedDestination = () => {
           </p>
         ) : (
           featuredHotels.map((hotel, index) => (
-            <HotelCard key={hotel.id} hotel={hotel} index={index} />
+            <HotelCard
+              key={hotel?.id || hotel?._id || index}
+              hotel={hotel}
+              index={index}
+            />
           ))
         )}
       </div>

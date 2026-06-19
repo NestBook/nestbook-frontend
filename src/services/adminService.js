@@ -41,3 +41,11 @@ export const uploadHotelImageApi = (hotelId, formData) => {
     },
   });
 };
+
+export const updateReviewStatusApi = (id, status) => {
+  return axiosClient.patch(`/admin/reviews/${id}/status`, { status });
+};
+
+export const deleteReviewApi = (id) => {
+  return axiosClient.delete(`/reviews/${id}`);
+};
