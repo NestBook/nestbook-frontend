@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import HotelCard from "../components/HotelCard";
 import { getHotelDetailApi, searchHotelsApi, getHotelRatingApi } from "../services/publicService";
 
-const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
+const CheckBox = ({ label, selected = false, onChange = () => { } }) => {
   return (
     <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
       <input
@@ -16,7 +16,7 @@ const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
   );
 };
 
-const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
+const RadioButton = ({ label, selected = false, onChange = () => { } }) => {
   return (
     <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
       <input
@@ -32,16 +32,16 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
 
 const AllRooms = () => {
   const [searchParams] = useSearchParams();
-  // State lưu dữ liệu gốc từ API
+
   const [originalHotels, setOriginalHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
 
-  // State cho bộ lọc
+
   const [selectedSort, setSelectedSort] = useState("Newest First");
   const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
 
-  // --- PHÂN TRANG ---
+
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
 
@@ -71,14 +71,12 @@ const AllRooms = () => {
         const res = await searchHotelsApi(params);
         // Backend bọc double-nested: { success: true, data: { success: true, data: [...] } }
         const searchResults = res.data?.data?.data ?? res.data?.data ?? res.data ?? [];
-        console.log("=== DỮ LIỆU TỪ API SEARCH ===", searchResults);
+
         const detailedHotels = await Promise.all(
           searchResults.map(async (searchItem) => {
             // Lấy ID một cách an toàn
             const hotelId = searchItem.id || searchItem._id;
-            console.log({ hotelId });
-            console.log("Chi tiết từng searchItem:", searchItem);
-            // Bỏ qua nếu không có ID
+
             if (!hotelId) return null;
 
             try {
@@ -105,10 +103,10 @@ const AllRooms = () => {
                 searchItem.minPricePerNight ||
                 (roomsList.length > 0
                   ? Math.min(
-                      ...roomsList.map(
-                        (r) => r.pricePerNight || r.price || 0,
-                      ),
-                    )
+                    ...roomsList.map(
+                      (r) => r.pricePerNight || r.price || 0,
+                    ),
+                  )
                   : 0);
               return {
                 ...hotelInfo,
@@ -136,7 +134,6 @@ const AllRooms = () => {
     fetchHotels();
   }, [searchParams]);
 
-  // Reset trang khi lọc hoặc sort
 
   // LOGIC XỬ LÝ LỌC & SẮP XẾP BẰNG USEMEMO
   const displayedHotels = useMemo(() => {
@@ -231,11 +228,10 @@ const AllRooms = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 border rounded ${
-                        currentPage === page
+                      className={`px-4 py-2 border rounded ${currentPage === page
                           ? "bg-blue-600 text-white"
                           : "hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>
@@ -257,9 +253,8 @@ const AllRooms = () => {
       {/* Filter Sidebar */}
       <div className="bg-white w-full lg:w-80 lg:shrink-0 border border-gray-300 text-gray-600 max-lg:mb-8 min-lg:mt-16">
         <div
-          className={`flex items-center justify-between px-5 py-2.5 lg:border-b border-gray-300 ${
-            openFilter ? "border-b" : ""
-          }`}
+          className={`flex items-center justify-between px-5 py-2.5 lg:border-b border-gray-300 ${openFilter ? "border-b" : ""
+            }`}
         >
           <p className="text-base font-medium text-gray-700">FILTERS</p>
           <div className="text-xs cursor-pointer">
@@ -278,9 +273,8 @@ const AllRooms = () => {
           </div>
         </div>
         <div
-          className={`${
-            openFilter ? "h-auto" : "h-0 lg:h-auto"
-          } overflow-hidden transition-all duration-700`}
+          className={`${openFilter ? "h-auto" : "h-0 lg:h-auto"
+            } overflow-hidden transition-all duration-700`}
         >
           <div className="px-5 pt-5">
             <p className="font-medium text-gray-800 pb-2 ">Price Range (VNĐ)</p>
