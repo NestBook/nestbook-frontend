@@ -5,6 +5,7 @@ import {
   getHotelRatingApi,
   getHotelRatingDistributionApi,
   createReviewApi,
+  getBookingByCodeApi,
 } from "../services/publicService";
 
 const RoomReviews = ({ hotelId, ratingStats, onReviewSubmitted }) => {
@@ -63,9 +64,40 @@ const RoomReviews = ({ hotelId, ratingStats, onReviewSubmitted }) => {
     setSubmitReviewSuccess("");
     setIsSubmittingReview(true);
 
+    const code = reviewBookingCode.trim();
+
     try {
+      // 1. Kiểm tra xem mã đặt phòng có tồn tại và thuộc về khách sạn này không
+      try {
+        const bookingRes = await getBookingByCodeApi(code);
+        const bookingData = bookingRes.data?.data ?? bookingRes.data;
+
+        if (!bookingData) {
+          setSubmitReviewError("Mã đặt phòng không hợp lệ hoặc không tồn tại!");
+          setIsSubmittingReview(false);
+          return;
+        }
+
+        if (String(bookingData.hotelId) !== String(hotelId)) {
+          setSubmitReviewError(
+            "Mã đặt phòng này thuộc về khách sạn khác. Bạn không thể viết đánh giá cho khách sạn này!"
+          );
+          setIsSubmittingReview(false);
+          return;
+        }
+      } catch (checkErr) {
+        console.error("Lỗi kiểm tra mã đặt phòng:", checkErr);
+        setSubmitReviewError(
+          checkErr.response?.data?.error?.message ||
+            "Không thể xác thực mã đặt phòng. Vui lòng thử lại!"
+        );
+        setIsSubmittingReview(false);
+        return;
+      }
+
+      // 2. Tiến hành gửi đánh giá nếu hợp lệ
       const payload = {
-        bookingCode: reviewBookingCode.trim(),
+        bookingCode: code,
         rating: Number(newRating),
         content: newComment.trim(),
       };
