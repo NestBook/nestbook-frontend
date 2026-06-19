@@ -100,6 +100,7 @@ const RoomReviews = ({ hotelId, ratingStats, onReviewSubmitted }) => {
         bookingCode: code,
         rating: Number(newRating),
         content: newComment.trim(),
+        hotelId: String(hotelId),
       };
 
       const res = await createReviewApi(payload);
