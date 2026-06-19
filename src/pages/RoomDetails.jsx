@@ -73,21 +73,18 @@ const RoomDetails = () => {
         const hotelData = hotelRes.data?.data?.data ?? hotelRes.data?.data ?? hotelRes.data;
         const roomsPayload = roomsRes.data?.data ?? roomsRes.data;
 
-        // BÓC TÁCH MẢNG ROOM TYPES
         const roomsArray = Array.isArray(roomsPayload)
           ? roomsPayload
           : roomsPayload?.roomTypes || [];
 
-        // --- GỘP ẢNH HOTEL + ẢNH TỪ TẤT CẢ ROOM TYPES THÀNH 1 GALLERY ---
         const hotelImgs = (hotelData?.images ?? []).map(
           (img) => img?.url || img,
         );
         const roomImgs = roomsArray.flatMap((rt) =>
           (rt.images ?? []).map((img) => img?.url || img),
         );
-        const allImages = [...new Set([...hotelImgs, ...roomImgs])]; // Loại bỏ ảnh trùng lặp
+        const allImages = [...new Set([...hotelImgs, ...roomImgs])];
 
-        // Lưu thông tin khách sạn kèm theo mảng ảnh tổng hợp
         setHotel({ ...hotelData, _galleryImages: allImages });
         setRoomTypes(roomsArray);
         setRatingStats(ratData);
@@ -125,7 +122,6 @@ const RoomDetails = () => {
   if (!hotel)
     return <div className="py-30 text-center">Không tìm thấy khách sạn!</div>;
 
-  // Lấy mảng ảnh tổng hợp đã gộp ở useEffect
   const hotelImages = hotel._galleryImages ?? [];
 
   return (
@@ -165,7 +161,7 @@ const RoomDetails = () => {
             <img
               onClick={() => setMainImage(img)}
               key={index}
-              src={img} // Vì logic ở trên đã bóc tách img thành URL string
+              src={img}
               alt="Hotel thumbnail"
               className={`w-full h-48 rounded-xl shadow-md object-cover cursor-pointer ${
                 mainImage === img ? "outline-3 outline-orange-500" : ""
