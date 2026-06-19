@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 
 const HotelCard = ({ hotel, room, index }) => {
-  //Bắt lấy chuỗi query hiện tại trên URL 
+
   const location = useLocation();
   const data = hotel || room;
   if (!data) return null;
