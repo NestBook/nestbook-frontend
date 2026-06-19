@@ -28,7 +28,6 @@ const getNextDayString = (dateStr) => {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${dd}`;
 };
-
 const RoomDetails = () => {
   const { id } = useParams();
   console.log("RoomDetails component mounted with hotel ID:", id);
@@ -41,7 +40,6 @@ const RoomDetails = () => {
   const [loading, setLoading] = useState(true);
 
   const [ratingStats, setRatingStats] = useState({ avgRating: 0, totalReviews: 0 });
-
   useEffect(() => {
     const fetchHotelInfo = async () => {
       try {
@@ -93,7 +91,6 @@ const RoomDetails = () => {
 
         if (allImages.length > 0) setMainImage(allImages[0]);
         else setMainImage("https://picsum.photos/800/500");
-
       } catch (error) {
         console.error("Lỗi khi tải thông tin khách sạn", error);
       } finally {

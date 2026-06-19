@@ -1,0 +1,16 @@
+# nestbook-frontend/.github/workflows/deploy.yml
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - '*'
+
+jobs:
+  pipeline:
+    uses: NestBook/config/.github/workflows/frontend.yml@main
+    with:
+      service_name: nestbook-frontend
+    secrets: inherit
