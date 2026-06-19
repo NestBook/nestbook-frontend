@@ -32,7 +32,6 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
 
 const AllRooms = () => {
   const [searchParams] = useSearchParams();
-
   // State lưu dữ liệu gốc từ API
   const [originalHotels, setOriginalHotels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -111,7 +110,6 @@ const AllRooms = () => {
                       ),
                     )
                   : 0);
-
               return {
                 ...hotelInfo,
                 minPricePerNight: minPrice,
@@ -188,7 +186,6 @@ const AllRooms = () => {
     setSelectedPriceRanges([]);
     setSelectedSort("Newest First");
   };
-
   return (
     <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
       <div className="flex-1 w-full lg:mr-8">

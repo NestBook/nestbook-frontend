@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 
 const HotelCard = ({ hotel, room, index }) => {
+  // (NEW) Bắt lấy chuỗi query hiện tại trên URL (ví dụ: ?city=HN&checkInDate=2026-06-20...)
+  const location = useLocation();
   const data = hotel || room;
   if (!data) return null;
 
@@ -46,7 +48,7 @@ const HotelCard = ({ hotel, room, index }) => {
 
   return (
     <Link
-      to={`/rooms/${id}`}
+      to={`/rooms/${id}${location.search}`}
       onClick={() => window.scrollTo(0, 0)}
       className="relative max-w-70 w-full rounded-xl overflow-hidden bg-white text-gray-500/90 shadow-[0px_4px_4px_rgba(0,0,0,0.05)] transition hover:shadow-lg block"
     >
