@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   getHotelsApi,
   createHotelApi,
@@ -11,6 +12,7 @@ import {
 } from "../../services/adminService";
 
 const Hotels = () => {
+  const { user: currentUser } = useAuth();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingHotel, setEditingHotel] = useState(null);
@@ -337,11 +339,13 @@ const Hotels = () => {
                 onChange={(e) => setSelectedOwnerId(e.target.value)}
               >
                 <option value="">-- Chọn Owner --</option>
-                {ownersList.map((owner) => (
-                  <option key={owner.id} value={owner.id}>
-                    {owner.email || owner.username} - ID: {owner.id}
-                  </option>
-                ))}
+                {ownersList
+                  .filter((owner) => String(owner.id) !== String(currentUser?.id))
+                  .map((owner) => (
+                    <option key={owner.id} value={owner.id}>
+                      {owner.email || owner.username} - ID: {owner.id}
+                    </option>
+                  ))}
               </select>
               <div className="flex justify-end gap-3">
                 <button
