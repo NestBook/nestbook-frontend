@@ -25,7 +25,7 @@ const Login = () => {
 
       const payload = res?.data?.data || res?.data;
 
-      if (!payload || !payload.accessToken) {
+      if (!payload || (!payload.accessToken && !payload.requiresMfa)) {
         throw new Error("Invalid response - Không tìm thấy Access Token");
       }
 
@@ -162,8 +162,8 @@ const Login = () => {
             type="submit"
             disabled={isLoading}
             className={`w-full py-3 rounded text-white transition-all ${isLoading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-black hover:bg-gray-800"
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-black hover:bg-gray-800"
               }`}
           >
             {isLoading ? "Đang xử lý..." : "Đăng nhập hệ thống"}
