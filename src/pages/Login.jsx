@@ -25,7 +25,7 @@ const Login = () => {
 
       const payload = res?.data?.data || res?.data;
 
-      if (!payload || !payload.accessToken) {
+      if (!payload || (!payload.accessToken && !payload.requiresMfa)) {
         throw new Error("Invalid response - Không tìm thấy Access Token");
       }
 
